@@ -1,5 +1,5 @@
-#ifndef DJI_SUBSYSTEM_PAIRER_H
-#define DJI_SUBSYSTEM_PAIRER_H
+#ifndef DJI_INTERFACE_WIFI_H
+#define DJI_INTERFACE_WIFI_H
 
 #include "dji/message.h"
 #include <QByteArray>
@@ -9,20 +9,21 @@ namespace dji {
 
 class Device;
 
-class SubsystemPairer : public QObject {
+class InterfaceWiFi : public QObject {
     Q_OBJECT
 public:
     enum class State { Idle, WaitingForStatus, WaitingForApproval, Finalizing };
 
-    explicit SubsystemPairer(Device *device);
+    explicit InterfaceWiFi(Device *device);
 
-    SubsystemID subsystemID() const {
-        return SubsystemID::Pairer;
+    InterfaceID interfaceID() const {
+        return InterfaceIDAppToWiFiGroundStation;
     }
 
     void pair();
     void connectToWiFi(const QString &ssid, const QString &psk);
     void startScanningWiFi();
+    void getCameraAPInfo();
     void handleMessage(const Message &msg);
 
     State state() const {
@@ -33,12 +34,15 @@ signals:
     void pairingComplete();
     void wifiConnected();
     void wifiScanReport(const QByteArray &report);
+    void cameraAPInfoReceived(const QString &ssid, const QString &psk);
     void error(const QString &message);
     void log(const QString &message);
 
 private:
     Device *m_device;
     State m_state = State::Idle;
+    QString m_cameraSSID;
+    QString m_cameraPSK;
 
     void sendRequestStartPairing();
     void sendMessageSetPairingPIN(const QString &pinCode);

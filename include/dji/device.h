@@ -1,6 +1,6 @@
 /**
  * @file device.h
- * @brief Base class for DJI devices, providing BLE communication and subsystem access.
+ * @brief Base class for DJI devices, providing BLE communication and interface access.
  */
 
 #ifndef DJI_DEVICE_H
@@ -14,9 +14,14 @@
 
 namespace dji {
 
-class SubsystemPairer;
-class SubsystemStreamer;
-class SubsystemConfigurer;
+class InterfaceWiFi;
+class InterfaceCamera;
+class InterfaceConfig;
+class InterfaceBattery;
+class InterfaceFlightController;
+class InterfaceGoggles;
+class InterfaceRemoteController;
+class InterfaceVideoTransmission;
 
 class Device : public QObject {
     Q_OBJECT
@@ -35,6 +40,7 @@ public:
     virtual void disconnectFromDevice();
 
     virtual void sendMessage(const Message &msg, bool noResponse = true);
+    virtual void sendACK(const Message &msg);
     virtual void sendRawPairing(const QByteArray &data);
 
     QString name() const {
@@ -61,14 +67,29 @@ public:
     virtual bool isConnected() const;
     virtual bool isInitialized() const;
 
-    SubsystemPairer *pairer() {
-        return m_pairer;
+    InterfaceWiFi *wifi() {
+        return m_wifi;
     }
-    SubsystemStreamer *streamer() {
-        return m_streamer;
+    InterfaceCamera *camera() {
+        return m_camera;
     }
-    SubsystemConfigurer *configurer() {
-        return m_configurer;
+    InterfaceConfig *config() {
+        return m_config;
+    }
+    InterfaceBattery *battery() {
+        return m_battery;
+    }
+    InterfaceFlightController *flightController() {
+        return m_flightController;
+    }
+    InterfaceGoggles *goggles() {
+        return m_goggles;
+    }
+    InterfaceRemoteController *remoteController() {
+        return m_remoteController;
+    }
+    InterfaceVideoTransmission *videoTransmission() {
+        return m_videoTransmission;
     }
 
 signals:
@@ -97,10 +118,18 @@ private slots:
 protected:
     void discoverCharacteristics();
     void receiveNotification(const QByteArray &data);
+    void simulateIncomingData(const QByteArray &data) {
+        receiveNotification(data);
+    }
 
-    SubsystemPairer *m_pairer;
-    SubsystemStreamer *m_streamer;
-    SubsystemConfigurer *m_configurer;
+    InterfaceWiFi *m_wifi;
+    InterfaceCamera *m_camera;
+    InterfaceConfig *m_config;
+    InterfaceBattery *m_battery;
+    InterfaceFlightController *m_flightController;
+    InterfaceGoggles *m_goggles;
+    InterfaceRemoteController *m_remoteController;
+    InterfaceVideoTransmission *m_videoTransmission;
     DeviceType m_deviceType = DeviceType::Unknown;
 
     QBluetoothDeviceInfo m_deviceInfo;
@@ -112,6 +141,7 @@ protected:
     QLowEnergyCharacteristic m_charPairingRequestor;
 
     bool m_initialized = false;
+    QByteArray m_receiveBuffer;
 };
 
 } // namespace dji

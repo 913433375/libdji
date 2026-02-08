@@ -4,51 +4,102 @@
  */
 
 #include "dji/device.h"
-#include "dji/subsystem_configurer.h"
-#include "dji/subsystem_pairer.h"
-#include "dji/subsystem_streamer.h"
+#include "dji/interface_battery.h"
+#include "dji/interface_camera.h"
+#include "dji/interface_config.h"
+#include "dji/interface_flight_controller.h"
+#include "dji/interface_goggles.h"
+#include "dji/interface_remote_controller.h"
+#include "dji/interface_video_transmission.h"
+#include "dji/interface_wifi.h"
 #include <QDebug>
 #include <QTimer>
 
 namespace dji {
 
-static const uint16_t characteristicIDReceiver = 0xfff4;
-static const uint16_t characteristicIDPairingRequestor = 0xfff3;
-static const uint16_t characteristicIDSender = 0xfff5;
+static const uint16_t characteristicIDReceiver = 0x002D;
+static const uint16_t characteristicIDPairingRequestor = 0x002E;
+static const uint16_t characteristicIDSender = 0x0030;
 
 Device::Device(QObject *parent) : QObject(parent) {
-    m_pairer = new SubsystemPairer(this);
-    m_streamer = new SubsystemStreamer(this);
-    m_configurer = new SubsystemConfigurer(this);
+    m_wifi = new InterfaceWiFi(this);
+    m_camera = new InterfaceCamera(this);
+    m_config = new InterfaceConfig(this);
+    m_battery = new InterfaceBattery(this);
+    m_flightController = new InterfaceFlightController(this);
+    m_goggles = new InterfaceGoggles(this);
+    m_remoteController = new InterfaceRemoteController(this);
+    m_videoTransmission = new InterfaceVideoTransmission(this);
 
-    connect(m_pairer, &SubsystemPairer::log, this, &Device::log);
-    connect(m_pairer, &SubsystemPairer::error, this, &Device::errorOccurred);
-    connect(m_streamer, &SubsystemStreamer::log, this, &Device::log);
-    connect(m_streamer, &SubsystemStreamer::error, this, &Device::errorOccurred);
-    connect(m_configurer, &SubsystemConfigurer::log, this, &Device::log);
-    connect(m_configurer, &SubsystemConfigurer::error, this, &Device::errorOccurred);
+    connect(m_wifi, &InterfaceWiFi::log, this, &Device::log);
+    connect(m_wifi, &InterfaceWiFi::error, this, &Device::errorOccurred);
+    connect(m_camera, &InterfaceCamera::log, this, &Device::log);
+    connect(m_camera, &InterfaceCamera::error, this, &Device::errorOccurred);
+    connect(m_config, &InterfaceConfig::log, this, &Device::log);
+    connect(m_config, &InterfaceConfig::error, this, &Device::errorOccurred);
+    connect(m_battery, &InterfaceBattery::log, this, &Device::log);
+    connect(m_battery, &InterfaceBattery::error, this, &Device::errorOccurred);
+    connect(m_flightController, &InterfaceFlightController::log, this, &Device::log);
+    connect(m_flightController, &InterfaceFlightController::error, this, &Device::errorOccurred);
+    connect(m_goggles, &InterfaceGoggles::log, this, &Device::log);
+    connect(m_goggles, &InterfaceGoggles::error, this, &Device::errorOccurred);
+    connect(m_remoteController, &InterfaceRemoteController::log, this, &Device::log);
+    connect(m_videoTransmission, &InterfaceVideoTransmission::log, this, &Device::log);
+    connect(m_remoteController, &InterfaceRemoteController::error, this, &Device::errorOccurred);
+    connect(m_videoTransmission, &InterfaceVideoTransmission::error, this, &Device::errorOccurred);
 
-    connect(this, &Device::messageReceived, m_pairer, &SubsystemPairer::handleMessage);
-    connect(this, &Device::messageReceived, m_streamer, &SubsystemStreamer::handleMessage);
-    connect(this, &Device::messageReceived, m_configurer, &SubsystemConfigurer::handleMessage);
+    connect(this, &Device::messageReceived, m_wifi, &InterfaceWiFi::handleMessage);
+    connect(this, &Device::messageReceived, m_camera, &InterfaceCamera::handleMessage);
+    connect(this, &Device::messageReceived, m_config, &InterfaceConfig::handleMessage);
+    connect(this, &Device::messageReceived, m_battery, &InterfaceBattery::handleMessage);
+    connect(this, &Device::messageReceived, m_flightController,
+            &InterfaceFlightController::handleMessage);
+    connect(this, &Device::messageReceived, m_goggles, &InterfaceGoggles::handleMessage);
+    connect(this, &Device::messageReceived, m_remoteController,
+            &InterfaceRemoteController::handleMessage);
+    connect(this, &Device::messageReceived, m_videoTransmission,
+            &InterfaceVideoTransmission::handleMessage);
 }
 
 Device::Device(const QBluetoothDeviceInfo &info, DeviceType type, QObject *parent)
     : QObject(parent), m_deviceInfo(info), m_deviceType(type) {
-    m_pairer = new SubsystemPairer(this);
-    m_streamer = new SubsystemStreamer(this);
-    m_configurer = new SubsystemConfigurer(this);
+    m_wifi = new InterfaceWiFi(this);
+    m_camera = new InterfaceCamera(this);
+    m_config = new InterfaceConfig(this);
+    m_battery = new InterfaceBattery(this);
+    m_flightController = new InterfaceFlightController(this);
+    m_goggles = new InterfaceGoggles(this);
+    m_remoteController = new InterfaceRemoteController(this);
+    m_videoTransmission = new InterfaceVideoTransmission(this);
 
-    connect(m_pairer, &SubsystemPairer::log, this, &Device::log);
-    connect(m_pairer, &SubsystemPairer::error, this, &Device::errorOccurred);
-    connect(m_streamer, &SubsystemStreamer::log, this, &Device::log);
-    connect(m_streamer, &SubsystemStreamer::error, this, &Device::errorOccurred);
-    connect(m_configurer, &SubsystemConfigurer::log, this, &Device::log);
-    connect(m_configurer, &SubsystemConfigurer::error, this, &Device::errorOccurred);
+    connect(m_wifi, &InterfaceWiFi::log, this, &Device::log);
+    connect(m_wifi, &InterfaceWiFi::error, this, &Device::errorOccurred);
+    connect(m_camera, &InterfaceCamera::log, this, &Device::log);
+    connect(m_camera, &InterfaceCamera::error, this, &Device::errorOccurred);
+    connect(m_config, &InterfaceConfig::log, this, &Device::log);
+    connect(m_config, &InterfaceConfig::error, this, &Device::errorOccurred);
+    connect(m_battery, &InterfaceBattery::log, this, &Device::log);
+    connect(m_battery, &InterfaceBattery::error, this, &Device::errorOccurred);
+    connect(m_flightController, &InterfaceFlightController::log, this, &Device::log);
+    connect(m_flightController, &InterfaceFlightController::error, this, &Device::errorOccurred);
+    connect(m_goggles, &InterfaceGoggles::log, this, &Device::log);
+    connect(m_goggles, &InterfaceGoggles::error, this, &Device::errorOccurred);
+    connect(m_remoteController, &InterfaceRemoteController::log, this, &Device::log);
+    connect(m_videoTransmission, &InterfaceVideoTransmission::log, this, &Device::log);
+    connect(m_remoteController, &InterfaceRemoteController::error, this, &Device::errorOccurred);
+    connect(m_videoTransmission, &InterfaceVideoTransmission::error, this, &Device::errorOccurred);
 
-    connect(this, &Device::messageReceived, m_pairer, &SubsystemPairer::handleMessage);
-    connect(this, &Device::messageReceived, m_streamer, &SubsystemStreamer::handleMessage);
-    connect(this, &Device::messageReceived, m_configurer, &SubsystemConfigurer::handleMessage);
+    connect(this, &Device::messageReceived, m_wifi, &InterfaceWiFi::handleMessage);
+    connect(this, &Device::messageReceived, m_camera, &InterfaceCamera::handleMessage);
+    connect(this, &Device::messageReceived, m_config, &InterfaceConfig::handleMessage);
+    connect(this, &Device::messageReceived, m_battery, &InterfaceBattery::handleMessage);
+    connect(this, &Device::messageReceived, m_flightController,
+            &InterfaceFlightController::handleMessage);
+    connect(this, &Device::messageReceived, m_goggles, &InterfaceGoggles::handleMessage);
+    connect(this, &Device::messageReceived, m_remoteController,
+            &InterfaceRemoteController::handleMessage);
+    connect(this, &Device::messageReceived, m_videoTransmission,
+            &InterfaceVideoTransmission::handleMessage);
 }
 
 Device::~Device() {
@@ -162,7 +213,7 @@ void Device::onServiceStateChanged(QLowEnergyService::ServiceState newState) {
 
         bool isReceiver = false;
         bool isSender = false;
-        bool isPairing = false;
+        bool isWiFi = false;
 
         if (c.uuid() == QBluetoothUuid(static_cast<uint16_t>(characteristicIDReceiver))) {
             isReceiver = true;
@@ -170,7 +221,7 @@ void Device::onServiceStateChanged(QLowEnergyService::ServiceState newState) {
             isSender = true;
         } else if (c.uuid() ==
                    QBluetoothUuid(static_cast<uint16_t>(characteristicIDPairingRequestor))) {
-            isPairing = true;
+            isWiFi = true;
         }
 
         if (isReceiver) {
@@ -187,10 +238,10 @@ void Device::onServiceStateChanged(QLowEnergyService::ServiceState newState) {
             m_charSender = c;
             emit log("[DJI-BLE] " +
                      QString("Found Sender characteristic: %1").arg(c.uuid().toString()));
-        } else if (isPairing) {
+        } else if (isWiFi) {
             m_charPairingRequestor = c;
             emit log("[DJI-BLE] " +
-                     QString("Found PairingRequestor characteristic: %1").arg(c.uuid().toString()));
+                     QString("Found WiFiRequestor characteristic: %1").arg(c.uuid().toString()));
         }
     }
 
@@ -227,20 +278,45 @@ void Device::onCharacteristicReadFinished(const QLowEnergyCharacteristic &c,
 
 void Device::receiveNotification(const QByteArray &data) {
     emit log("[DJI-BLE] " + QString("Received notification: %1").arg(QString(data.toHex())));
+    m_receiveBuffer.append(data);
 
-    bool ok = false;
-    Message msg = Message::parse(data, &ok);
-    if (!ok) {
-        emit log("[DJI-BLE] " +
-                 QString("Failed to parse incoming message: %1").arg(QString(data.toHex())));
-        return;
+    while (!m_receiveBuffer.isEmpty()) {
+        bool ok = false;
+        bool needMore = false;
+        Message msg = Message::parse(m_receiveBuffer, &ok, &needMore);
+
+        if (needMore) {
+            return;
+        }
+
+        if (!ok) {
+            emit log("[DJI-BLE] " + QString("Failed to parse incoming message, clearing buffer: %1")
+                                        .arg(QString(m_receiveBuffer.toHex())));
+            m_receiveBuffer.clear();
+            return;
+        }
+
+        uint16_t length = (static_cast<uint8_t>(m_receiveBuffer[1])) |
+                          ((static_cast<uint8_t>(m_receiveBuffer[2]) & 0x03) << 8);
+        m_receiveBuffer.remove(0, length);
+
+        if (static_cast<uint8_t>(msg.msgType.flags) &
+            static_cast<uint8_t>(MessageTypeFlagAckRequired)) {
+            emit log("[DJI-BLE] Sending ACK for message");
+            sendACK(msg);
+        }
+
+        emit log(
+            "[DJI-BLE] " +
+            QString("Parsed message: interface=%1->%2 id=0x%3 type=flags:0x%4,set:0x%5,id:0x%6")
+                .arg(static_cast<uint8_t>(msg.interface.sender), 0, 16)
+                .arg(static_cast<uint8_t>(msg.interface.receiver), 0, 16)
+                .arg(static_cast<uint16_t>(msg.msgId), 0, 16)
+                .arg(static_cast<uint8_t>(msg.msgType.flags), 0, 16)
+                .arg(static_cast<uint8_t>(msg.msgType.cmdSet), 0, 16)
+                .arg(static_cast<uint8_t>(msg.msgType.cmdID), 0, 16));
+        emit messageReceived(msg);
     }
-
-    emit log("[DJI-BLE] " + QString("Parsed message: subsystem=0x%1 id=0x%2 type=0x%3")
-                                .arg(static_cast<uint16_t>(msg.subsystem), 0, 16)
-                                .arg(static_cast<uint16_t>(msg.msgId), 0, 16)
-                                .arg(static_cast<uint32_t>(msg.msgType), 0, 16));
-    emit messageReceived(msg);
 }
 
 void Device::sendMessage(const Message &msg, bool noResponse) {
@@ -255,22 +331,26 @@ void Device::sendMessage(const Message &msg, bool noResponse) {
     m_service->writeCharacteristic(m_charSender, data, mode);
 }
 
+void Device::sendACK(const Message &msg) {
+    Message ack;
+    ack.interface = {msg.interface.receiver, msg.interface.sender}; // Swap for ACK
+    ack.msgId = msg.msgId;
+    ack.msgType = MessageType::response(msg.msgType.cmdSet, msg.msgType.cmdID);
+    ack.payload = QByteArray::fromHex("00");
+    sendMessage(ack, true);
+}
+
 void Device::sendRawPairing(const QByteArray &data) {
-    if (!m_initialized || !m_service || !m_charReceiver.isValid()) {
-        emit errorOccurred("Cannot send pairing request: Device not initialized");
+    if (!m_initialized || !m_service || !m_charPairingRequestor.isValid()) {
+        emit errorOccurred(
+            "Cannot send pairing request: Device not initialized or characteristic not found");
         return;
     }
 
-    QLowEnergyDescriptor desc = m_charReceiver.descriptor(
-        QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
-    if (desc.isValid()) {
-        emit log("[DJI-BLE] " +
-                 QString("Sending raw pairing (writing to CCCD): %1").arg(QString(data.toHex())));
-        m_service->writeDescriptor(desc, data);
-    } else {
-        emit log("[DJI-BLE] "
-                 "Cannot send raw pairing: CCCD not found on Receiver characteristic");
-    }
+    emit log("[DJI-BLE] " + QString("Sending raw pairing (writing to characteristic 0x2E): %1")
+                                .arg(QString(data.toHex())));
+    m_service->writeCharacteristic(m_charPairingRequestor, data,
+                                   QLowEnergyService::WriteWithoutResponse);
 }
 
 bool Device::isConnected() const {

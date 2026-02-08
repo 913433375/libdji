@@ -1,7 +1,7 @@
 # `libdji` a library to manage DJI Osmo via BLE for Qt
 
 This is actually just a blind port of [github.com/xaionaro-go/djictl (pkg/djictl)](https://github.com/xaionaro-go/djictl/tree/main/pkg/djictl) to Qt.
-The last commit reached parity with is: [645a14056614d68613ca47264e3bd26d9ef16c25](https://github.com/xaionaro-go/djictl/commit/645a14056614d68613ca47264e3bd26d9ef16c25).
+The last commit reached parity with is: [ddeced5422fe3a27075602d41b49e61ca60c99d8](https://github.com/xaionaro-go/djictl/commit/ddeced5422fe3a27075602d41b49e61ca60c99d8).
 
 The inital purpose of this library is to use it in the Qt app I'm developing here:
 https://github.com/wing-out/ui
@@ -166,10 +166,10 @@ Represents a DJI device with BLE communication capabilities.
 - `isConnected()`: Check if BLE connected
 - `isInitialized()`: Check if device is initialized
 
-**Subsystems:**
-- `pairer()`: Access pairing subsystem
-- `streamer()`: Access streaming subsystem
-- `configurer()`: Access configuration subsystem
+**Interfaces:**
+- `pairer()`: Access pairing interface
+- `streamer()`: Access streaming interface
+- `configurer()`: Access configuration interface
 
 #### DiscoveryOptions
 
@@ -191,6 +191,6 @@ Struct containing connection parameters:
 
 ### Advanced Usage
 
-For more advanced use cases, you can implement custom device flows using the `DeviceFlow` class and subsystems like `SubsystemPairer`, `SubsystemStreamer`, and `SubsystemConfigurer`.
+For more advanced use cases, you can implement custom device flows using the `DeviceFlow` class and interfaces like `InterfacePairer`, `InterfaceStreamer`, and `InterfaceConfigurer`.
 
-Refer to the test files and source code for detailed examples of subsystem usage.
+Refer to the test files and source code for detailed examples of interface usage.

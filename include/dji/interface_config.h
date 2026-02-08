@@ -1,5 +1,5 @@
-#ifndef DJI_SUBSYSTEM_CONFIGURER_H
-#define DJI_SUBSYSTEM_CONFIGURER_H
+#ifndef DJI_INTERFACE_CONFIG_H
+#define DJI_INTERFACE_CONFIG_H
 
 #include "dji/message.h"
 #include <QByteArray>
@@ -9,13 +9,13 @@ namespace dji {
 
 class Device;
 
-class SubsystemConfigurer : public QObject {
+class InterfaceConfig : public QObject {
     Q_OBJECT
 public:
-    explicit SubsystemConfigurer(Device *device);
+    explicit InterfaceConfig(Device *device);
 
-    SubsystemID subsystemID() const {
-        return SubsystemID::Configurer;
+    InterfaceID interfaceID() const {
+        return InterfaceIDAppToCamera;
     }
 
     void setImageStabilization(ImageStabilization v);

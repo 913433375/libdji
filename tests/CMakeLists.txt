@@ -18,13 +18,14 @@ target_link_libraries(dji_tests PRIVATE
 
 qt_add_executable(dji_demo
     ${SHARED_FLOW_SOURCES}
-    demo_connect_flow.cpp
+    dji_demo.cpp
 )
 
 target_link_libraries(dji_demo PRIVATE
     dji
     Qt6::Core
     Qt6::Bluetooth
+    Qt6::Network
 )
 
 add_test(NAME dji_tests COMMAND dji_tests)

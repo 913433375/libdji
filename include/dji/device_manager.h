@@ -75,6 +75,7 @@ private slots:
     void onPairingComplete(Device *dev);
     void onWifiConnected(Device *dev);
     void onPrepareComplete(Device *dev);
+    void onConfigureComplete(Device *dev);
     void onStartComplete(Device *dev);
     void onStopComplete(Device *dev);
     void onError(Device *dev, const QString &msg);
@@ -85,6 +86,7 @@ private:
         bool isWiFiConnected = false;
         bool isStreaming = false;
         bool isPrepared = false;
+        bool isConfigured = false;
         DeviceFlow *activeFlow = nullptr;
     };
 

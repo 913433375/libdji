@@ -6,8 +6,9 @@
 #include "dji/device_manager.h"
 #include "dji/device.h"
 #include "dji/device_flow.h"
-#include "dji/subsystem_pairer.h"
-#include "dji/subsystem_streamer.h"
+#include "dji/interface_camera.h"
+#include "dji/interface_video_transmission.h"
+#include "dji/interface_wifi.h"
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QDebug>
 
@@ -60,23 +61,26 @@ void DeviceManager::addDevice(Device *device) {
     connect(device, &Device::errorOccurred, this,
             [this, device](const QString &msg) { onError(device, msg); });
 
-    connect(device->pairer(), &SubsystemPairer::pairingComplete, this,
+    connect(device->wifi(), &InterfaceWiFi::pairingComplete, this,
             [this, device]() { onPairingComplete(device); });
-    connect(device->pairer(), &SubsystemPairer::wifiConnected, this,
+    connect(device->wifi(), &InterfaceWiFi::wifiConnected, this,
             [this, device]() { onWifiConnected(device); });
-    connect(device->pairer(), &SubsystemPairer::error, this,
+    connect(device->wifi(), &InterfaceWiFi::error, this,
             [this, device](const QString &msg) { onError(device, msg); });
-    connect(device->pairer(), &SubsystemPairer::log, this, &DeviceManager::log);
+    connect(device->wifi(), &InterfaceWiFi::log, this, &DeviceManager::log);
 
-    connect(device->streamer(), &SubsystemStreamer::prepareToLiveStreamComplete, this,
-            [this, device]() { onPrepareComplete(device); });
-    connect(device->streamer(), &SubsystemStreamer::startLiveStreamComplete, this,
+    connect(device->videoTransmission(), &InterfaceVideoTransmission::prepareToLiveStreamComplete,
+            this, [this, device]() { onPrepareComplete(device); });
+    connect(device->videoTransmission(), &InterfaceVideoTransmission::startLiveStreamComplete, this,
             [this, device]() { onStartComplete(device); });
-    connect(device->streamer(), &SubsystemStreamer::stopLiveStreamComplete, this,
+    connect(device->videoTransmission(), &InterfaceVideoTransmission::configureLiveStreamComplete,
+            this, [this, device]() { onConfigureComplete(device); });
+    connect(device->videoTransmission(), &InterfaceVideoTransmission::stopLiveStreamComplete, this,
             [this, device]() { onStopComplete(device); });
-    connect(device->streamer(), &SubsystemStreamer::error, this,
+    connect(device->videoTransmission(), &InterfaceVideoTransmission::error, this,
             [this, device](const QString &msg) { onError(device, msg); });
-    connect(device->streamer(), &SubsystemStreamer::log, this, &DeviceManager::log);
+    connect(device->videoTransmission(), &InterfaceVideoTransmission::log, this,
+            &DeviceManager::log);
 
     emit deviceChanged();
     emit devicesChanged();
@@ -136,7 +140,8 @@ void DeviceManager::onDeviceDiscovered(const QBluetoothDeviceInfo &info) {
     }
 
     if (!m_discoveryOptions.deviceAddrFilter.isEmpty() &&
-        !info.address().toString().contains(m_discoveryOptions.deviceAddrFilter, Qt::CaseInsensitive)) {
+        !info.address().toString().contains(m_discoveryOptions.deviceAddrFilter,
+                                            Qt::CaseInsensitive)) {
         return;
     }
 
@@ -213,6 +218,10 @@ void DeviceManager::onWifiConnected(Device *dev) {
 
 void DeviceManager::onPrepareComplete(Device *dev) {
     m_deviceStates[dev].isPrepared = true;
+}
+
+void DeviceManager::onConfigureComplete(Device *dev) {
+    m_deviceStates[dev].isConfigured = true;
 }
 
 void DeviceManager::onStartComplete(Device *dev) {

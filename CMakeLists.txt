@@ -5,22 +5,34 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Bluetooth Test)
+find_package(Qt6 REQUIRED COMPONENTS Core Bluetooth Network Test)
 
 qt_add_library(dji STATIC
     include/dji/message.h
     include/dji/device.h
-    include/dji/subsystem_pairer.h
-    include/dji/subsystem_streamer.h
-    include/dji/subsystem_configurer.h
+    include/dji/interface_wifi.h
+    include/dji/interface_camera.h
+    include/dji/interface_video_transmission.h
+    include/dji/interface_config.h
+    include/dji/interface_battery.h
+    include/dji/interface_flight_controller.h
+    include/dji/interface_goggles.h
+    include/dji/interface_remote_controller.h
+    include/dji/wifi_controller.h
     include/dji/device_manager.h
     include/dji/device_flow.h
     include/dji/crc.h
     src/message.cpp
     src/device.cpp
-    src/subsystem_pairer.cpp
-    src/subsystem_streamer.cpp
-    src/subsystem_configurer.cpp
+    src/interface_wifi.cpp
+    src/interface_camera.cpp
+    src/interface_video_transmission.cpp
+    src/interface_config.cpp
+    src/interface_battery.cpp
+    src/interface_flight_controller.cpp
+    src/interface_goggles.cpp
+    src/interface_remote_controller.cpp
+    src/wifi_controller.cpp
     src/device_manager.cpp
     src/device_flow.cpp
     src/crc.cpp
@@ -34,6 +46,7 @@ target_include_directories(dji PUBLIC
 target_link_libraries(dji PUBLIC
     Qt6::Core
     Qt6::Bluetooth
+    Qt6::Network
 )
 
 set_target_properties(dji PROPERTIES
