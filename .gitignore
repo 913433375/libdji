@@ -1,4 +1,4 @@
-/build
+/build*
 /tests/Testing
 /tests/build
 /.cache
@@ -6,3 +6,4 @@
 /.github
 /.vscode
 /compile_commands.json
+*.log

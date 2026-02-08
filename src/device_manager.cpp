@@ -9,6 +9,7 @@
 #include "dji/interface_camera.h"
 #include "dji/interface_video_transmission.h"
 #include "dji/interface_wifi.h"
+#include "dji/logging.h"
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QDebug>
 
@@ -102,7 +103,7 @@ void DeviceManager::startDiscovery(const DiscoveryOptions &options) {
         connect(m_discoveryAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred, this,
                 &DeviceManager::onScanError);
     }
-    emit log("[DJI-BLE] Manager: Starting device discovery...");
+    DJI_BLE_LOG("Manager: Starting device discovery...");
     m_discoveryAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
 }
 
@@ -119,12 +120,13 @@ void DeviceManager::onDeviceDiscovered(const QBluetoothDeviceInfo &info) {
         }
     }
 
-    qDebug() << "[DJI-BLE] Discovered device" << info.name() << info.address().toString();
+    qCDebug(djiBleLog).noquote() << "Discovered device" << info.name() << info.address().toString();
     auto manufacturerData = info.manufacturerData();
-    qDebug() << "[DJI-BLE] Manufacturer data keys:" << manufacturerData.keys();
+    qCDebug(djiBleLog).noquote() << "Manufacturer data keys:" << manufacturerData.keys();
     for (auto key : manufacturerData.keys()) {
-        qDebug() << "[DJI-BLE] Manufacturer data for" << QString("0x%1").arg(key, 4, 16, QChar('0'))
-                 << ":" << manufacturerData.value(key).toHex();
+        qCDebug(djiBleLog).noquote()
+            << "Manufacturer data for" << QString("0x%1").arg(key, 4, 16, QChar('0')) << ":"
+            << manufacturerData.value(key).toHex();
     }
 
     DeviceType deviceType = identifyDeviceType(manufacturerData.value(0x08AA));
@@ -145,9 +147,9 @@ void DeviceManager::onDeviceDiscovered(const QBluetoothDeviceInfo &info) {
         return;
     }
 
-    emit log(QString("[DJI-BLE] Manager: Matched DJI device %1 (%2) type: %3")
-                 .arg(info.name(), info.address().toString())
-                 .arg(static_cast<int>(deviceType)));
+    DJI_BLE_LOG(QString("Manager: Matched DJI device %1 (%2) type: %3")
+                    .arg(info.name(), info.address().toString())
+                    .arg(static_cast<int>(deviceType)));
 
     Device *dev = createDevice(info, deviceType);
     addDevice(dev);
@@ -158,7 +160,7 @@ Device *DeviceManager::createDevice(const QBluetoothDeviceInfo &info, DeviceType
 }
 
 void DeviceManager::onScanFinished() {
-    emit log("[DJI-BLE] Manager: Device discovery finished.");
+    DJI_BLE_LOG("Manager: Device discovery finished.");
 }
 
 void DeviceManager::onScanError() {
@@ -235,8 +237,8 @@ void DeviceManager::onStopComplete(Device *dev) {
 }
 
 void DeviceManager::onError(Device *dev, const QString &msg) {
-    emit error(QString("[DJI-BLE] %1: %2")
-                   .arg(dev ? dev->deviceInfo().address().toString() : "Manager", msg));
+    emit error(
+        QString("%1: %2").arg(dev ? dev->deviceInfo().address().toString() : "Manager", msg));
 }
 
 } // namespace dji

@@ -22,6 +22,7 @@ qt_add_library(dji STATIC
     include/dji/device_manager.h
     include/dji/device_flow.h
     include/dji/crc.h
+    include/dji/logging.h
     src/message.cpp
     src/device.cpp
     src/interface_wifi.cpp
@@ -36,6 +37,7 @@ qt_add_library(dji STATIC
     src/device_manager.cpp
     src/device_flow.cpp
     src/crc.cpp
+    src/logging.cpp
 )
 
 target_include_directories(dji PUBLIC

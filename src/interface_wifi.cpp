@@ -1,5 +1,6 @@
 #include "dji/interface_wifi.h"
 #include "dji/device.h"
+#include "dji/logging.h"
 #include <QDebug>
 #include <QTimer>
 
@@ -14,8 +15,7 @@ void InterfaceWiFi::pair() {
     if (m_state != State::Idle)
         return;
 
-    emit log("[DJI-BLE] "
-             "Starting pairing process...");
+    DJI_BLE_LOG("Starting pairing process...");
     m_state = State::WaitingForStatus;
 
     sendRequestStartPairing();
@@ -24,14 +24,13 @@ void InterfaceWiFi::pair() {
 }
 
 void InterfaceWiFi::connectToWiFi(const QString &ssid, const QString &psk) {
-    emit log("[DJI-BLE] " + QString("Connecting to WiFi SSID: %1").arg(ssid));
+    DJI_BLE_LOG(QString("Connecting to WiFi SSID: %1").arg(ssid));
 
     sendMessageConnectToWiFi(ssid, psk);
 }
 
 void InterfaceWiFi::startScanningWiFi() {
-    emit log("[DJI-BLE] "
-             "Starting WiFi scan...");
+    DJI_BLE_LOG("Starting WiFi scan...");
     sendMessageStartScanningWiFi();
 }
 
@@ -50,14 +49,12 @@ void InterfaceWiFi::getCameraAPInfo() {
 void InterfaceWiFi::handleMessage(const Message &msg) {
     if (msg.msgType == MessageTypePairingStatus) {
         if (msg.payload.size() >= 2 && static_cast<uint8_t>(msg.payload[1]) == 0x01) {
-            emit log("[DJI-BLE] "
-                     "Device is already paired.");
+            DJI_BLE_LOG("Device is already paired.");
             m_state = State::Idle;
             emit pairingComplete();
         }
     } else if (msg.msgType == MessageTypePairingPINApproved) {
-        emit log("[DJI-BLE] "
-                 "PIN approved. Finalizing pairing...");
+        DJI_BLE_LOG("PIN approved. Finalizing pairing...");
 
         sendMessagePairingStage1();
         sendMessagePairingStage2();
@@ -66,28 +63,25 @@ void InterfaceWiFi::handleMessage(const Message &msg) {
         emit pairingComplete();
     } else if (msg.msgType == MessageTypeConnectToWiFiResult) {
         if (msg.payload.size() >= 2 && msg.payload[0] == 0x00 && msg.payload[1] == 0x00) {
-            emit log("[DJI-BLE] "
-                     "WiFi connected successfully.");
+            DJI_BLE_LOG("WiFi connected successfully.");
             emit wifiConnected();
         } else {
             QString err =
-                "[DJI-BLE] " +
                 QString("WiFi connection failed. Payload: %1").arg(QString(msg.payload.toHex()));
             emit error(err);
         }
     } else if (msg.msgType == MessageTypeWiFiScanReport) {
-        emit log("[DJI-BLE] "
-                 "Received WiFi scan report.");
+        DJI_BLE_LOG("Received WiFi scan report.");
         emit wifiScanReport(msg.payload);
     } else if (msg.msgType == MessageTypeCameraAPInfoResultSSID) {
         m_cameraSSID = unpackStringU16BE(msg.payload);
-        emit log("[DJI-BLE] " + QString("Received camera SSID: %1").arg(m_cameraSSID));
+        DJI_BLE_LOG(QString("Received camera SSID: %1").arg(m_cameraSSID));
         if (!m_cameraSSID.isEmpty() && !m_cameraPSK.isEmpty()) {
             emit cameraAPInfoReceived(m_cameraSSID, m_cameraPSK);
         }
     } else if (msg.msgType == MessageTypeCameraAPInfoResultPSK) {
         m_cameraPSK = unpackStringU16BE(msg.payload);
-        emit log("[DJI-BLE] " + QString("Received camera PSK: %1").arg(m_cameraPSK));
+        DJI_BLE_LOG(QString("Received camera PSK: %1").arg(m_cameraPSK));
         if (!m_cameraSSID.isEmpty() && !m_cameraPSK.isEmpty()) {
             emit cameraAPInfoReceived(m_cameraSSID, m_cameraPSK);
         }

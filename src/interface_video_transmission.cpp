@@ -1,5 +1,6 @@
 #include "dji/interface_video_transmission.h"
 #include "dji/device.h"
+#include "dji/logging.h"
 #include <QDebug>
 #include <QtEndian>
 
@@ -9,7 +10,7 @@ InterfaceVideoTransmission::InterfaceVideoTransmission(Device *device) : m_devic
 }
 
 void InterfaceVideoTransmission::prepareToLiveStream() {
-    emit log("[DJI-BLE] Preparing to live stream...");
+    DJI_BLE_LOG("Preparing to live stream...");
     m_prepareStage = 1;
     Message msg;
     msg.interface = interfaceID();
@@ -21,7 +22,7 @@ void InterfaceVideoTransmission::prepareToLiveStream() {
 
 void InterfaceVideoTransmission::startLiveStream(Resolution resolution, uint16_t bitrateKbps,
                                                  FPS fps, const QString &rtmpURL) {
-    emit log("[DJI-BLE] Starting live stream...");
+    DJI_BLE_LOG("Starting live stream...");
     Message msg;
     msg.interface = interfaceID();
     msg.msgId = MessageID::StartStreaming;
@@ -31,7 +32,7 @@ void InterfaceVideoTransmission::startLiveStream(Resolution resolution, uint16_t
 }
 
 void InterfaceVideoTransmission::stopLiveStream() {
-    emit log("[DJI-BLE] Stopping live stream...");
+    DJI_BLE_LOG("Stopping live stream...");
     Message msg;
     msg.interface = interfaceID();
     msg.msgId = MessageID::StopStreaming;
@@ -42,7 +43,7 @@ void InterfaceVideoTransmission::stopLiveStream() {
 
 void InterfaceVideoTransmission::configureLiveStream(Resolution resolution, uint16_t bitrateKbps,
                                                      FPS fps, const QString &rtmpURL) {
-    emit log("[DJI-BLE] Configuring live stream...");
+    DJI_BLE_LOG("Configuring live stream...");
     Message msg;
     msg.interface = interfaceID();
     msg.msgId = MessageID::ConfigureStreaming;
@@ -80,7 +81,7 @@ void InterfaceVideoTransmission::configureLiveStream(Resolution resolution, uint
 }
 
 void InterfaceVideoTransmission::configureRTMP(bool enabled, const QString &url) {
-    emit log("[DJI-BLE] Configuring RTMP broadcast...");
+    DJI_BLE_LOG("Configuring RTMP broadcast...");
     Message msg;
     msg.interface = InterfaceIDAppToCamera;
     msg.msgType = MessageTypeOsmoBroadcastConfig;

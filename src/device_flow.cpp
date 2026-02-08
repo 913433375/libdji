@@ -3,6 +3,7 @@
 #include "dji/interface_camera.h"
 #include "dji/interface_video_transmission.h"
 #include "dji/interface_wifi.h"
+#include "dji/logging.h"
 
 namespace dji {
 
@@ -31,9 +32,12 @@ void StreamingStarter::start(Device *dev) {
     if (dev->isInitialized()) {
         onInitialized();
     } else if (!dev->isConnected()) {
-        emit log(QString("[DJI-BLE] Flow: Connecting to device %1...")
-                     .arg(dev->deviceInfo().address().toString()));
+        DJI_BLE_LOG(QString("Flow: Connecting to device %1...")
+                        .arg(dev->deviceInfo().address().toString()));
         dev->connectToDevice();
+    } else {
+        DJI_BLE_LOG(QString("Flow: Waiting for device %1 initialization...")
+                        .arg(dev->deviceInfo().address().toString()));
     }
 }
 
@@ -44,45 +48,45 @@ void StreamingStarter::stop() {
 }
 
 void StreamingStarter::onInitialized() {
-    emit log(QString("[DJI-BLE] Flow: Device %1 initialized. Starting pairing...")
-                 .arg(m_device->deviceInfo().address().toString()));
+    DJI_BLE_LOG(QString("Flow: Device %1 initialized. Starting pairing...")
+                    .arg(m_device->deviceInfo().address().toString()));
     m_device->wifi()->pair();
 }
 
 void StreamingStarter::onPairingComplete() {
-    emit log(QString("[DJI-BLE] Flow: Pairing complete for %1. Preparing to live stream...")
-                 .arg(m_device->deviceInfo().address().toString()));
+    DJI_BLE_LOG(QString("Flow: Pairing complete for %1. Preparing to live stream...")
+                    .arg(m_device->deviceInfo().address().toString()));
     m_device->videoTransmission()->prepareToLiveStream();
 }
 
 void StreamingStarter::onPrepareComplete() {
-    emit log(QString("[DJI-BLE] Flow: Prepare complete for %1. Connecting to WiFi %2...")
-                 .arg(m_device->deviceInfo().address().toString(), m_options.ssid));
+    DJI_BLE_LOG(QString("Flow: Prepare complete for %1. Connecting to WiFi %2...")
+                    .arg(m_device->deviceInfo().address().toString(), m_options.ssid));
     m_device->wifi()->connectToWiFi(m_options.ssid, m_options.psk);
 }
 
 void StreamingStarter::onWifiConnected() {
-    emit log(QString("[DJI-BLE] Flow: WiFi connected for %1. Configuring live stream...")
-                 .arg(m_device->deviceInfo().address().toString()));
+    DJI_BLE_LOG(QString("Flow: WiFi connected for %1. Configuring live stream...")
+                    .arg(m_device->deviceInfo().address().toString()));
     m_device->videoTransmission()->configureLiveStream(m_options.resolution, m_options.bitrateKbps,
                                                        m_options.fps, m_options.rtmpUrl);
 }
 
 void StreamingStarter::onConfigureComplete() {
-    emit log(QString("[DJI-BLE] Flow: Configuration complete for %1. Starting live stream...")
-                 .arg(m_device->deviceInfo().address().toString()));
+    DJI_BLE_LOG(QString("Flow: Configuration complete for %1. Starting live stream...")
+                    .arg(m_device->deviceInfo().address().toString()));
     m_device->videoTransmission()->startLiveStream(m_options.resolution, m_options.bitrateKbps,
                                                    m_options.fps, m_options.rtmpUrl);
 }
 
 void StreamingStarter::onStartComplete() {
-    emit log(QString("[DJI-BLE] Flow: Live stream started for %1.")
-                 .arg(m_device->deviceInfo().address().toString()));
+    DJI_BLE_LOG(QString("Flow: Live stream started for %1.")
+                    .arg(m_device->deviceInfo().address().toString()));
     emit finished(m_device, true);
 }
 
 void StreamingStarter::onError(const QString &msg) {
-    emit log(QString("[DJI-BLE] Flow error: %1").arg(msg));
+    DJI_BLE_LOG(QString("Flow error: %1").arg(msg));
     emit finished(m_device, false);
 }
 
@@ -100,27 +104,27 @@ void GenericActionFlow::start(Device *dev) {
     if (dev->isInitialized()) {
         onInitialized();
     } else if (!dev->isConnected()) {
-        emit log(QString("[DJI-BLE] Flow: Connecting to device %1...")
-                     .arg(dev->deviceInfo().address().toString()));
+        DJI_BLE_LOG(QString("Flow: Connecting to device %1...")
+                        .arg(dev->deviceInfo().address().toString()));
         dev->connectToDevice();
     }
 }
 
 void GenericActionFlow::onInitialized() {
-    emit log(QString("[DJI-BLE] Flow: Device %1 initialized. Starting pairing...")
-                 .arg(m_device->deviceInfo().address().toString()));
+    DJI_BLE_LOG(QString("Flow: Device %1 initialized. Starting pairing...")
+                    .arg(m_device->deviceInfo().address().toString()));
     m_device->wifi()->pair();
 }
 
 void GenericActionFlow::onPairingComplete() {
-    emit log(QString("[DJI-BLE] Flow: Pairing complete for %1. Executing action...")
-                 .arg(m_device->deviceInfo().address().toString()));
+    DJI_BLE_LOG(QString("Flow: Pairing complete for %1. Executing action...")
+                    .arg(m_device->deviceInfo().address().toString()));
     m_action(m_device);
     emit finished(m_device, true);
 }
 
 void GenericActionFlow::onError(const QString &msg) {
-    emit log(QString("[DJI-BLE] Flow error: %1").arg(msg));
+    DJI_BLE_LOG(QString("Flow error: %1").arg(msg));
     emit finished(m_device, false);
 }
 
@@ -158,7 +162,7 @@ void StreamingStopper::onFinishedAction() {
 }
 
 void StreamingStopper::onError(const QString &msg) {
-    emit log(QString("[DJI-BLE] Flow error: %1").arg(msg));
+    DJI_BLE_LOG(QString("Flow error: %1").arg(msg));
     emit finished(m_device, false);
 }
 
@@ -190,12 +194,12 @@ void CameraAPInfoFlow::onPairingComplete() {
 }
 
 void CameraAPInfoFlow::onInfoReceived(const QString &ssid, const QString &psk) {
-    emit log(QString("Camera AP Info: SSID='%1', PSK='%2'").arg(ssid, psk));
+    DJI_BLE_LOG(QString("Camera AP Info: SSID=%1, PSK=%2").arg(ssid, psk));
     emit finished(m_device, true);
 }
 
 void CameraAPInfoFlow::onError(const QString &msg) {
-    emit log(QString("[DJI-BLE] Flow error: %1").arg(msg));
+    DJI_BLE_LOG(QString("Flow error: %1").arg(msg));
     emit finished(m_device, false);
 }
 

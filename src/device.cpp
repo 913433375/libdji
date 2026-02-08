@@ -12,6 +12,7 @@
 #include "dji/interface_remote_controller.h"
 #include "dji/interface_video_transmission.h"
 #include "dji/interface_wifi.h"
+#include "dji/logging.h"
 #include <QDebug>
 #include <QTimer>
 
@@ -125,8 +126,8 @@ void Device::connectToDevice() {
     connect(m_controller, &QLowEnergyController::discoveryFinished, this,
             &Device::onServiceDiscoveryFinished);
 
-    emit log("[DJI-BLE] " + QString("Connecting to %1 (%2)")
-                                .arg(m_deviceInfo.name(), m_deviceInfo.address().toString()));
+    DJI_BLE_LOG(QString("Connecting to %1 (%2)")
+                    .arg(m_deviceInfo.name(), m_deviceInfo.address().toString()));
     m_controller->connectToDevice();
 }
 
@@ -137,20 +138,18 @@ void Device::disconnectFromDevice() {
 }
 
 void Device::onControllerConnected() {
-    emit log("[DJI-BLE] "
-             "Controller connected. Discovering services...");
+    DJI_BLE_LOG("Controller connected. Discovering services...");
     m_controller->discoverServices();
 }
 
 void Device::onControllerDisconnected() {
-    emit log("[DJI-BLE] "
-             "Controller disconnected");
+    DJI_BLE_LOG("Controller disconnected");
     emit disconnected();
     m_initialized = false;
 }
 
 void Device::onControllerError(QLowEnergyController::Error error) {
-    emit errorOccurred("[DJI-BLE] " + QString("Controller error: %1").arg(error));
+    emit errorOccurred(QString("Controller error: %1").arg(error));
 }
 
 void Device::onServiceDiscovered(const QBluetoothUuid &newService) {
@@ -159,8 +158,7 @@ void Device::onServiceDiscovered(const QBluetoothUuid &newService) {
 }
 
 void Device::onServiceDiscoveryFinished() {
-    emit log("[DJI-BLE] "
-             "Service discovery finished. Searching for DJI characteristics...");
+    DJI_BLE_LOG("Service discovery finished. Searching for DJI characteristics...");
     discoverCharacteristics();
 }
 
@@ -191,9 +189,9 @@ void Device::onServiceStateChanged(QLowEnergyService::ServiceState newState) {
     if (!service)
         return;
 
-    emit log("[DJI-BLE] " + QString("Service %1 discovered with %2 characteristics")
-                                .arg(service->serviceUuid().toString())
-                                .arg(service->characteristics().size()));
+    DJI_BLE_LOG(QString("Service %1 discovered with %2 characteristics")
+                    .arg(service->serviceUuid().toString())
+                    .arg(service->characteristics().size()));
 
     const QList<QLowEnergyCharacteristic> chars = service->characteristics();
     for (const QLowEnergyCharacteristic &c : chars) {
@@ -208,8 +206,8 @@ void Device::onServiceStateChanged(QLowEnergyService::ServiceState newState) {
             props += "Notify ";
         if (c.properties() & QLowEnergyCharacteristic::Indicate)
             props += "Indicate ";
-        emit log("[DJI-BLE] " +
-                 QString("Characteristic: %1 Properties: %2").arg(c.uuid().toString()).arg(props));
+        DJI_BLE_LOG(
+            QString("Characteristic: %1 Properties: %2").arg(c.uuid().toString()).arg(props));
 
         bool isReceiver = false;
         bool isSender = false;
@@ -232,16 +230,13 @@ void Device::onServiceStateChanged(QLowEnergyService::ServiceState newState) {
             if (desc.isValid()) {
                 service->writeDescriptor(desc, QByteArray::fromHex("0100"));
             }
-            emit log("[DJI-BLE] " +
-                     QString("Found Receiver characteristic: %1").arg(c.uuid().toString()));
+            DJI_BLE_LOG(QString("Found Receiver characteristic: %1").arg(c.uuid().toString()));
         } else if (isSender) {
             m_charSender = c;
-            emit log("[DJI-BLE] " +
-                     QString("Found Sender characteristic: %1").arg(c.uuid().toString()));
+            DJI_BLE_LOG(QString("Found Sender characteristic: %1").arg(c.uuid().toString()));
         } else if (isWiFi) {
             m_charPairingRequestor = c;
-            emit log("[DJI-BLE] " +
-                     QString("Found WiFiRequestor characteristic: %1").arg(c.uuid().toString()));
+            DJI_BLE_LOG(QString("Found WiFiRequestor characteristic: %1").arg(c.uuid().toString()));
         }
     }
 
@@ -250,8 +245,7 @@ void Device::onServiceStateChanged(QLowEnergyService::ServiceState newState) {
             m_initialized = true;
             m_service = service;
 
-            emit log("[DJI-BLE] "
-                     "Device initialized. All characteristics found.");
+            DJI_BLE_LOG("Device initialized. All characteristics found.");
             emit connected();
             emit initialized();
         }
@@ -277,7 +271,7 @@ void Device::onCharacteristicReadFinished(const QLowEnergyCharacteristic &c,
 }
 
 void Device::receiveNotification(const QByteArray &data) {
-    emit log("[DJI-BLE] " + QString("Received notification: %1").arg(QString(data.toHex())));
+    DJI_BLE_LOG(QString("Received notification: %1").arg(QString(data.toHex())));
     m_receiveBuffer.append(data);
 
     while (!m_receiveBuffer.isEmpty()) {
@@ -290,8 +284,8 @@ void Device::receiveNotification(const QByteArray &data) {
         }
 
         if (!ok) {
-            emit log("[DJI-BLE] " + QString("Failed to parse incoming message, clearing buffer: %1")
-                                        .arg(QString(m_receiveBuffer.toHex())));
+            DJI_BLE_LOG(QString("Failed to parse incoming message, clearing buffer: %1")
+                            .arg(QString(m_receiveBuffer.toHex())));
             m_receiveBuffer.clear();
             return;
         }
@@ -302,12 +296,11 @@ void Device::receiveNotification(const QByteArray &data) {
 
         if (static_cast<uint8_t>(msg.msgType.flags) &
             static_cast<uint8_t>(MessageTypeFlagAckRequired)) {
-            emit log("[DJI-BLE] Sending ACK for message");
+            DJI_BLE_LOG("Sending ACK for message");
             sendACK(msg);
         }
 
-        emit log(
-            "[DJI-BLE] " +
+        DJI_BLE_LOG(
             QString("Parsed message: interface=%1->%2 id=0x%3 type=flags:0x%4,set:0x%5,id:0x%6")
                 .arg(static_cast<uint8_t>(msg.interface.sender), 0, 16)
                 .arg(static_cast<uint8_t>(msg.interface.receiver), 0, 16)
@@ -347,8 +340,8 @@ void Device::sendRawPairing(const QByteArray &data) {
         return;
     }
 
-    emit log("[DJI-BLE] " + QString("Sending raw pairing (writing to characteristic 0x2E): %1")
-                                .arg(QString(data.toHex())));
+    DJI_BLE_LOG(QString("Sending raw pairing (writing to characteristic 0x2E): %1")
+                    .arg(QString(data.toHex())));
     m_service->writeCharacteristic(m_charPairingRequestor, data,
                                    QLowEnergyService::WriteWithoutResponse);
 }

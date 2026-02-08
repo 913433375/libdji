@@ -1,5 +1,6 @@
 #include "dji/interface_config.h"
 #include "dji/device.h"
+#include "dji/logging.h"
 #include <QDebug>
 
 namespace dji {
@@ -8,14 +9,13 @@ InterfaceConfig::InterfaceConfig(Device *device) : m_device(device) {
 }
 
 void InterfaceConfig::setImageStabilization(ImageStabilization v) {
-    emit log("[DJI-BLE] " + QString("Setting image stabilization to %1").arg(static_cast<int>(v)));
+    DJI_BLE_LOG(QString("Setting image stabilization to %1").arg(static_cast<int>(v)));
     sendMessageSetImageStabilization(v);
 }
 
 void InterfaceConfig::handleMessage(const Message &msg) {
     if (msg.interface == InterfaceIDAppToCamera && msg.msgType == MessageTypeStartStopStreaming) {
-        emit log("[DJI-BLE] " +
-                 QString("Received configurer result: %1").arg(QString(msg.payload.toHex())));
+        DJI_BLE_LOG(QString("Received configurer result: %1").arg(QString(msg.payload.toHex())));
     }
 }
 
