@@ -52,7 +52,7 @@ uint8_t deviceTypeToStabilizationByte(DeviceType t) {
 
 DeviceType identifyDeviceType(const QByteArray &manufacturerData) {
     if (manufacturerData.size() < 4)
-        return DeviceType::Unknown;
+        return DeviceType::Undefined;
     uint8_t typeByte = static_cast<uint8_t>(manufacturerData[2]);
     switch (typeByte) {
     case 0x15:
