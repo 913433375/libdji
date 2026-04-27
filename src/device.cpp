@@ -18,9 +18,13 @@
 
 namespace dji {
 
-static const uint16_t characteristicIDReceiver = 0x002D;
-static const uint16_t characteristicIDPairingRequestor = 0x002E;
-static const uint16_t characteristicIDSender = 0x0030;
+// WARNING: These are Bluetooth GATT *characteristic UUIDs* (16-bit short form),
+// NOT handle indices (as used by djictl's VHandle()/ATT handles).
+// djictl uses 0x002D/0x002E/0x0030 as handle indices — those are NOT valid here.
+// Qt resolves characteristics by UUID. Do NOT change these to handle values.
+static const uint16_t characteristicIDReceiver        = 0xfff4;
+static const uint16_t characteristicIDPairingRequestor = 0xfff3;
+static const uint16_t characteristicIDSender           = 0xfff5;
 
 Device::Device(QObject *parent) : QObject(parent) {
     m_wifi = new InterfaceWiFi(this);
@@ -340,7 +344,7 @@ void Device::sendRawPairing(const QByteArray &data) {
         return;
     }
 
-    DJI_BLE_LOG(QString("Sending raw pairing (writing to characteristic 0x2E): %1")
+    DJI_BLE_LOG(QString("Sending raw pairing (writing to characteristic 0xfff3 PairingRequestor): %1")
                     .arg(QString(data.toHex())));
     m_service->writeCharacteristic(m_charPairingRequestor, data,
                                    QLowEnergyService::WriteWithoutResponse);
