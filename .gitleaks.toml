@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Context7 public registration key"
+paths = ['''^context7\.json$''']
