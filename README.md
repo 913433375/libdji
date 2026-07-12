@@ -48,6 +48,19 @@ cmake --build build
 
 This will create `libdji.a` (or equivalent) in the build directory.
 
+### Formatting the Sources
+
+Run the formatting target from the repository root:
+
+```bash
+make format
+```
+
+This requires `clang-format` to be available on `PATH`.
+The target discovers C++ sources relative to the repository root, so the
+checkout can live in any directory. It skips generated files under `build/`
+and `build-local/`.
+
 ### Integrating into Your Qt Project
 
 1. Add libdji to your CMake project:
