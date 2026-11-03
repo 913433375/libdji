@@ -9,13 +9,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install build tools
-        run: |
-          sudo apt update
-          sudo apt install -y cmake build-essential qt6-base-dev
+      - name: Install Qt6
+        id: install-qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.6.3'
+          modules: 'qtconnectivity'
 
       - name: Configure CMake
-        run: cmake -S . -B build -DENABLE_BLUETOOTH=OFF
+        run: cmake -S . -B build -DCMAKE_PREFIX_PATH="${{ steps.install-qt.outputs.qt-path }}"
 
       - name: Build
         run: cmake --build build --config Release
