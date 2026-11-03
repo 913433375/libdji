@@ -9,10 +9,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install build tools
         run: |
           sudo apt update
-          sudo apt install -y cmake build-essential qt6-base-dev libqt6bluetooth6-dev qt6-declarative-dev || true
+          sudo apt install -y cmake build-essential
+
+      - name: Set up Qt
+        uses: SimSun/setup-qt@v2
+        with:
+          version: '6.5.2'
+          modules: 'qtbase qtconnectivity'
 
       - name: Configure CMake
         run: cmake -S . -B build
