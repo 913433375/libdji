@@ -9,13 +9,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install build tools
         run: |
           sudo apt update
-          sudo apt install -y cmake build-essential qt6-base-dev libqt6bluetooth6-dev
+          sudo apt install -y cmake build-essential qt6-base-dev
 
       - name: Configure CMake
-        run: cmake -S . -B build
+        run: cmake -S . -B build -DENABLE_BLUETOOTH=OFF
 
       - name: Build
         run: cmake --build build --config Release
