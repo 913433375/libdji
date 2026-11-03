@@ -12,9 +12,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y cmake build-essential qt6-base-dev libqt6蓝牙5-dev || true
-          # 顺便安装 Qt6 基础模块和开发工具
-          sudo apt install -y qt6-base-dev libgl1-mesa-dev
+          sudo apt install -y cmake build-essential qt6-base-dev libqt6bluetooth6-dev qt6-declarative-dev || true
 
       - name: Configure CMake
         run: cmake -S . -B build
