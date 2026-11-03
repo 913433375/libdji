@@ -1,4 +1,4 @@
-name: Build Windows Executable
+name: Build C++ Library
 
 on: [push]
 
@@ -9,18 +9,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-
-      - name: Build djictl for Windows
+      - name: Install dependencies
         run: |
-          cd cmd/djictl
-          GOOS=windows GOARCH=amd64 go build -o ../../djictl.exe .
+          sudo apt update
+          sudo apt install -y cmake build-essential qt6-base-dev libqt6bluetooth6-dev
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: djictl-windows
-          path: djictl.exe
+      - name: Configure CMake
+        run: cmake -S . -B build
+
+      - name: Build
+        run: cmake --build build --config Release
