@@ -1,26 +1,28 @@
-name: Build djictl Windows EXE
+name: Build libdji for Windows
 
 on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - name: Set up Qt
+        uses: simonlovesyou/setup-qt@v1 # 或者使用成熟的 setup-qt 动作
         with:
-          go-version: '1.22'
+          qt-version: '6.6.3'
+          qt-modules: 'qtconnectivity'
 
-      - name: Build Windows Executable
-        run: |
-          cd cmd/djictl
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o ../../djictl.exe .
+      - name: Configure CMake
+        run: cmake -S . -B build -DBUILD_TESTING=ON
 
-      - name: Upload Windows EXE
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Upload Windows Executable
         uses: actions/upload-artifact@v4
         with:
-          name: djictl-windows-exe
-          path: djictl.exe
+          name: dji-demo-windows-exe
+          path: build/tests/Release/dji_demo.exe
